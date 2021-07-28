@@ -18,6 +18,8 @@ import os
 import random
 import time
 
+os.environ[ 'NUMBA_CACHE_DIR' ] = '/tmp/'
+
 import torch
 import multiprocessing
 import numpy as np
