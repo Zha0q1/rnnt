@@ -49,6 +49,9 @@ if [[ $DGXSYSTEM == "DGXA100"* ]]; then
   echo "using NCCL_TOPO_FILE ${NCCL_TOPO_FILE}"
 fi
 
+
+srun nvidia-modprobe -u -c=0
+
 # Run experiments
 for _experiment_index in $(seq 1 "${NEXP}"); do
     (
@@ -66,7 +69,7 @@ logging.log_event(key=logging.constants.CACHE_CLEAR, value=True)\""
         fi
 
         # Run experiment
-        SEED=$(($SEED + $_experiment_index)) srun --mpi=none --ntasks="${SLURM_JOB_NUM_NODES}" --ntasks-per-node="${DGXNGPU}" \
+        SEED=$(($SEED + $_experiment_index)) srun --mpi=none \
             --container-name="${_cont_name}" --container-mounts="${_cont_mounts}" \
             bash -c 'cd workspace/rnnt && ./run_and_time.sh'
     ) |& tee "${_logfile_base}_${_experiment_index}.log"
