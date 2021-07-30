@@ -1,5 +1,5 @@
 ## System config params
-export DGXNNODES=1
+export DGXNNODES=2
 export DGXSYSTEM=$(basename $(readlink -f ${BASH_SOURCE[0]}) | sed 's/^config_//' | sed 's/\.sh$//' )
 export DGXNGPU=8
 export DGXSOCKETCORES=64
@@ -12,7 +12,7 @@ export METADATA_DIR="/lustre/fsw/mlperf-ci/tokenized/"
 export SENTENCEPIECES_DIR="/lustre/fsw/mlperf-ci/sentpiece"
 #export BATCHSIZE=256
 #export EVAL_BATCHSIZE=338
-export BATCHSIZE=16
+export BATCHSIZE=48
 export EVAL_BATCHSIZE=22
 export GRAD_ACCUMULATION_STEPS=1
 export WALLTIME=04:00:00
@@ -47,5 +47,5 @@ export MIN_SEQ_SPLIT_LEN=20
 export APEX_MLP=true
 export PRE_SORT_FOR_SEQ_SPLIT=true
 #export LOG_FREQUENCY=1000
-export LOG_FREQUENCY=10
+export LOG_FREQUENCY=5
 export JIT_TENSOR_FORMATION=true

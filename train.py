@@ -18,6 +18,8 @@ import os
 import random
 import time
 
+os.environ['PYTHON_EGG_CACHE'] = '/tmp'
+# RuntimeError: cannot cache function '__shear_dense': no locator available for file '/opt/conda/lib/python3.6/site-packages/librosa/util/utils.py'
 os.environ[ 'NUMBA_CACHE_DIR' ] = '/tmp/'
 
 import torch
@@ -505,6 +507,7 @@ def main():
             min_lr=args.min_lr, exp_gamma=args.lr_exp_gamma, dist_lamb=args.dist_lamb)
 
     if not args.dist_lamb and multi_gpu:
+        print('using ddp here')
         model = DistributedDataParallel(model)
 
     print_once('Setting up datasets...')
@@ -830,6 +833,7 @@ def main():
         step_start_time = time.time()
 
         for batch in train_loader:
+            print('step is ', step)
             if accumulated_batches == 0:
                 if not args.dist_lamb:
                     optimizer.zero_grad()
@@ -910,6 +914,10 @@ def main():
                         dict_log["seq-len-min"] = min(all_feat_lens).item()
                         dict_log["seq-len-max"] = max(all_feat_lens).item()
 
+                    print('loss ', dict_log['loss'])
+                    print('throughput ', dict_log['throughput'])
+                    print('took ', dict_log['took'])
+                    print('lrate ', dict_log['lrate'])
                     log((epoch, step % steps_per_epoch or steps_per_epoch, steps_per_epoch),
                         step, 'train', dict_log)
 
@@ -964,11 +972,13 @@ def main():
         logging.log_end(logging.constants.RUN_STOP, metadata={'status': 'aborted'})
 
     if epoch == args.epochs:
+        print('evaluating the model at the end')
         evaluate(epoch, step, val_loader, val_feat_proc, tokenizer.detokenize,
                  ema_model, loss_fn, greedy_decoder, args.amp_level)
 
     flush_log()
     if args.save_at_the_end:
+        print('saving the model at the end')
         checkpointer.save(model, ema_model, optimizer, epoch, step, best_wer)
 
 
