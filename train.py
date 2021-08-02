@@ -27,16 +27,15 @@ import multiprocessing
 import numpy as np
 # smddp: import smddp
 #import torch.distributed as dist
-#import smdistributed.dataparallel.torch.distributed
+#from apex.parallel import DistributedDataParallel
 import smdistributed.dataparallel.torch.distributed as dist
 from smdistributed.dataparallel.torch.parallel.distributed import DistributedDataParallel
 if not dist.is_initialized():
+    print('initiating process group!!!!')
     dist.init_process_group()
-
 from apex import amp
 from torch.cuda.amp import GradScaler
 from apex.optimizers import FusedLAMB
-from apex.parallel import DistributedDataParallel
 from apex.contrib.optimizers.distributed_fused_lamb import DistributedFusedLAMB
 import amp_C
 import math
@@ -381,7 +380,8 @@ def main():
     torch.backends.cudnn.benchmark = args.cudnn_benchmark
 
     # set up distributed training
-    multi_gpu = args.dist_lamb or (int(os.environ.get('WORLD_SIZE', 1)) > 1)
+    # smddp: hard code multi_gpu to True
+    multi_gpu = True#args.dist_lamb or (int(os.environ.get('WORLD_SIZE', 1)) > 1)
     if multi_gpu:
         torch.cuda.set_device(args.local_rank)
         # smddp: change init_process_group
@@ -663,10 +663,10 @@ def main():
 
     logging.log_end(logging.constants.INIT_STOP)
     if multi_gpu:
-        torch.distributed.barrier()
+        dist.barrier()
     logging.log_start(logging.constants.RUN_START)
     if multi_gpu:
-        torch.distributed.barrier()
+        dist.barrier()
 
     if args.pre_sort_for_seq_split and not args.vectorized_sampler:
         raise NotImplementedError("Pre sort only works with vectorized sampler for now")
