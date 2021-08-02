@@ -25,7 +25,14 @@ os.environ[ 'NUMBA_CACHE_DIR' ] = '/tmp/'
 import torch
 import multiprocessing
 import numpy as np
-import torch.distributed as dist
+# smddp: import smddp
+#import torch.distributed as dist
+#import smdistributed.dataparallel.torch.distributed
+import smdistributed.dataparallel.torch.distributed as dist
+from smdistributed.dataparallel.torch.parallel.distributed import DistributedDataParallel
+if not dist.is_initialized():
+    dist.init_process_group()
+
 from apex import amp
 from torch.cuda.amp import GradScaler
 from apex.optimizers import FusedLAMB
@@ -73,7 +80,10 @@ def parse_args():
     training.add_argument('--amp_level', default=1, type=int, choices=[0, 1, 2, 3],
                           help='APEX AMP optimization level')
     training.add_argument('--seed', default=None, type=int, help='Random seed')
-    training.add_argument('--local_rank', default=os.getenv('LOCAL_RANK', 0), type=int,
+    # smddp:
+    #training.add_argument('--local_rank', default=os.getenv('LOCAL_RANK', 0), type=int,
+    #                      help='GPU id used for distributed training')
+    training.add_argument('--local_rank', default=dist.get_local_rank(), type=int,
                           help='GPU id used for distributed training')
     training.add_argument('--target', default=0.058, type=float, help='Target WER accuracy')
     training.add_argument('--apex_transducer_loss', default=None, type=str, choices=['fp16', 'fp32'], 
@@ -374,7 +384,9 @@ def main():
     multi_gpu = args.dist_lamb or (int(os.environ.get('WORLD_SIZE', 1)) > 1)
     if multi_gpu:
         torch.cuda.set_device(args.local_rank)
-        dist.init_process_group(backend='nccl', init_method='env://')
+        # smddp: change init_process_group
+        #dist.init_process_group(backend='nccl', init_method='env://')
+        #dist.init_process_group()
         world_size = dist.get_world_size()
         print_once(f'Distributed training with {world_size} GPUs\n')
     else:
@@ -677,6 +689,7 @@ def main():
             args.pre_sort_for_seq_split
         )
     else:
+        print('using simple sampler!!')
         train_sampler = dali_sampler.SimpleSampler(train_dataset_kw)
 
     eval_sampler = dali_sampler.SimpleSampler(val_dataset_kw)
@@ -880,6 +893,7 @@ def main():
                     grad_scaler.update()
 
                 else:
+                    print('calling optimizer step')
                     optimizer.step()
 
                 if args.multi_tensor_ema == True:
