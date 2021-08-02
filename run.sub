@@ -18,7 +18,7 @@ set -euxo pipefail
 : "${METADATA_DIR:=''}"
 # Other vars
 readonly _logfile_base="${LOGDIR}/${DATESTAMP}"
-readonly _cont_name=dlc-pt
+readonly _cont_name=rnn_speech_recognition_zhaoqi_edition
 _cont_mounts="${DATADIR}:/datasets/,${LOGDIR}:/results"
 _cont_mounts+=",${METADATA_DIR}:/metadata"
 _cont_mounts+=",${SENTENCEPIECES_DIR}:/sentencepieces"
@@ -63,7 +63,7 @@ for _experiment_index in $(seq 1 "${NEXP}"); do
         # Clear caches
         if [ "${CLEAR_CACHES}" -eq 1 ]; then
             srun --ntasks="${SLURM_JOB_NUM_NODES}" bash -c "echo -n 'Clearing cache on ' && hostname && sync && sudo /sbin/sysctl vm.drop_caches=3"
-            srun --ntasks="${SLURM_JOB_NUM_NODES}" --container-name="${_cont_name}" bash -c "ls workspace/rnnt && cd /workspace/rnnt && python -c \"
+            srun --ntasks="${SLURM_JOB_NUM_NODES}" --container-name="${_cont_name}" bash -c "cd /workspace/rnnt && python -c \"
 from mlperf import logging
 logging.log_event(key=logging.constants.CACHE_CLEAR, value=True)\""
         fi
@@ -71,7 +71,7 @@ logging.log_event(key=logging.constants.CACHE_CLEAR, value=True)\""
         # Run experiment
         SEED=$(($SEED + $_experiment_index)) srun --mpi=none \
             --container-name="${_cont_name}" --container-mounts="${_cont_mounts}" \
-            bash -c 'cd workspace/rnnt && ./run_and_time.sh'
+            bash -c 'cd /workspace/rnnt && ./run_and_time.sh'
     ) |& tee "${_logfile_base}_${_experiment_index}.log"
 done
 
