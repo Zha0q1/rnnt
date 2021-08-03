@@ -29,7 +29,8 @@ import torch.distributed as dist
 from apex import amp
 from torch.cuda.amp import GradScaler
 from apex.optimizers import FusedLAMB
-from apex.parallel import DistributedDataParallel
+from torch.nn.parallel import DistributedDataParallel
+#from apex.parallel import DistributedDataParallel
 from apex.contrib.optimizers.distributed_fused_lamb import DistributedFusedLAMB
 import amp_C
 import math
@@ -376,6 +377,8 @@ def main():
         torch.cuda.set_device(args.local_rank)
         dist.init_process_group(backend='nccl', init_method='env://')
         world_size = dist.get_world_size()
+        print('local_rank is, ', args.local_rank)
+        print('world size is, ', dist.get_world_size() )
         print_once(f'Distributed training with {world_size} GPUs\n')
     else:
         world_size = 1
@@ -508,7 +511,8 @@ def main():
 
     if not args.dist_lamb and multi_gpu:
         print('using ddp here')
-        model = DistributedDataParallel(model)
+        model = model.to(args.local_rank)
+        model = DistributedDataParallel(model, device_ids=[args.local_rank])
 
     print_once('Setting up datasets...')
     (
