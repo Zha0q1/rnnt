@@ -53,6 +53,7 @@ from rnnt.rnnt_graph import RNNTGraph
 
 from mlperf import logging
 
+from torch.profiler import profile, record_function, ProfilerActivity
 
 # TODO Eval batch size
 
@@ -282,10 +283,7 @@ def train_step( model, loss_fn, args, batch_size, feats, feat_lens, txt, txt_len
         if rnnt_graph is not None:
             log_probs, log_prob_lens = rnnt_graph.step(feats, feat_lens, txt, txt_lens, meta_data[0])
         else:    
-            print('not using rnnt graph')
-            model_start = time.time()
             log_probs, log_prob_lens = model(feats, feat_lens, txt, txt_lens, meta_data[0])
-            print('model time is ', time.time() - model_start)
 
         loss = loss_fn(log_probs, log_prob_lens, txt, txt_lens, meta_data[0])
         if args.enable_prefetch and train_loader is not None:
@@ -871,9 +869,11 @@ def main():
 
 
 
+            #with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as prof:
+                #with record_function("model_step"):
             loss_item, lr_item = train_step( model, loss_fn, args, batch_size, feats, feat_lens, txt, txt_lens, optimizer, 
                                     grad_scaler, meta_data, train_loader, rnnt_graph, copy_stream, pred_stream)
-
+            #print_once(prof.key_averages().table(sort_by="cuda_time_total", row_limit=50))
 
             step_utts += txt_lens.size(0) * world_size
             epoch_utts += txt_lens.size(0) * world_size
