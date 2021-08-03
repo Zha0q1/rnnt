@@ -856,6 +856,8 @@ def main():
 
         for batch in train_loader:
             print('step is ', step)
+            if step == 7:
+                break
             if accumulated_batches == 0:
                 if not args.dist_lamb:
                     optimizer.zero_grad()
