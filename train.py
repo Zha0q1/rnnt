@@ -282,7 +282,10 @@ def train_step( model, loss_fn, args, batch_size, feats, feat_lens, txt, txt_len
         if rnnt_graph is not None:
             log_probs, log_prob_lens = rnnt_graph.step(feats, feat_lens, txt, txt_lens, meta_data[0])
         else:    
+            print('not using rnnt graph')
+            model_start = time.time()
             log_probs, log_prob_lens = model(feats, feat_lens, txt, txt_lens, meta_data[0])
+            print('model time is ', time.time() - model_start)
 
         loss = loss_fn(log_probs, log_prob_lens, txt, txt_lens, meta_data[0])
         if args.enable_prefetch and train_loader is not None:
