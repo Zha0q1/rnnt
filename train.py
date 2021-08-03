@@ -22,6 +22,8 @@ os.environ['PYTHON_EGG_CACHE'] = '/tmp'
 # RuntimeError: cannot cache function '__shear_dense': no locator available for file '/opt/conda/lib/python3.6/site-packages/librosa/util/utils.py'
 os.environ[ 'NUMBA_CACHE_DIR' ] = '/tmp/'
 
+os.environ["OMP_NUM_THREADS"] = str(1)
+
 import torch
 import multiprocessing
 import numpy as np
@@ -289,8 +291,11 @@ def train_step( model, loss_fn, args, batch_size, feats, feat_lens, txt, txt_len
     if args.batch_split_factor == 1:
         if rnnt_graph is not None:
             log_probs, log_prob_lens = rnnt_graph.step(feats, feat_lens, txt, txt_lens, meta_data[0])
-        else:    
+        else:
+            print('not using rnnt graph')
+            model_start = time.time()
             log_probs, log_prob_lens = model(feats, feat_lens, txt, txt_lens, meta_data[0])
+            print('time taken: ', time.time()-model_start)
 
         loss = loss_fn(log_probs, log_prob_lens, txt, txt_lens, meta_data[0])
         if args.enable_prefetch and train_loader is not None:
@@ -388,6 +393,8 @@ def main():
         #dist.init_process_group(backend='nccl', init_method='env://')
         #dist.init_process_group()
         world_size = dist.get_world_size()
+        print('local rank is ', args.local_rank)
+        print('world size is ', world_size)
         print_once(f'Distributed training with {world_size} GPUs\n')
     else:
         world_size = 1
@@ -417,6 +424,7 @@ def main():
         assert args.dist_lamb, "dist LAMB must be used when batch split is enabled"
 
     num_nodes = os.environ.get('SLURM_JOB_NUM_NODES', 1)
+    print('num nodes is ?? ', num_nodes)
     logging.log_event(logging.constants.SUBMISSION_BENCHMARK, value=logging.constants.RNNT)
     logging.log_event(logging.constants.SUBMISSION_ORG, value='NVIDIA')
     logging.log_event(logging.constants.SUBMISSION_DIVISION, value=logging.constants.CLOSED) # closed or open
@@ -520,6 +528,7 @@ def main():
 
     if not args.dist_lamb and multi_gpu:
         print('using ddp here')
+        model = model.to(args.local_rank)
         model = DistributedDataParallel(model)
 
     print_once('Setting up datasets...')
