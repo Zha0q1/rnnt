@@ -29,8 +29,8 @@ import torch.distributed as dist
 from apex import amp
 from torch.cuda.amp import GradScaler
 from apex.optimizers import FusedLAMB
-from torch.nn.parallel import DistributedDataParallel
-#from apex.parallel import DistributedDataParallel
+#from torch.nn.parallel import DistributedDataParallel
+from apex.parallel import DistributedDataParallel
 from apex.contrib.optimizers.distributed_fused_lamb import DistributedFusedLAMB
 import amp_C
 import math
@@ -282,8 +282,10 @@ def train_step( model, loss_fn, args, batch_size, feats, feat_lens, txt, txt_len
     if args.batch_split_factor == 1:
         if rnnt_graph is not None:
             log_probs, log_prob_lens = rnnt_graph.step(feats, feat_lens, txt, txt_lens, meta_data[0])
-        else:    
+        else:  
+            model_start = time.time()
             log_probs, log_prob_lens = model(feats, feat_lens, txt, txt_lens, meta_data[0])
+            print('model time is', time.time() - model_start)
 
         loss = loss_fn(log_probs, log_prob_lens, txt, txt_lens, meta_data[0])
         if args.enable_prefetch and train_loader is not None:
@@ -301,17 +303,19 @@ def train_step( model, loss_fn, args, batch_size, feats, feat_lens, txt, txt_len
 
         del log_probs, log_prob_lens
 
+        backward_start = time.time()
         if args.dist_lamb:
             grad_scaler.scale(loss).backward()
         else:
             with amp.scale_loss(loss, optimizer) as scaled_loss:
                 scaled_loss.backward()
+                print('backward time is ', time.time() - backward_start)
 
         # sync before return         
         copy_stream.synchronize()
         if torch.isnan(loss_cpu).any():
             raise Exception("Loss is NaN")
-
+        print('time after sync is ', time.time() - backward_start)
         return loss_cpu.item(), lr_cpu.item()
 
     else:
@@ -512,8 +516,9 @@ def main():
 
     if not args.dist_lamb and multi_gpu:
         print('using ddp here')
-        model = model.to(args.local_rank)
-        model = DistributedDataParallel(model, device_ids=[args.local_rank])
+        model = DistributedDataParallel(model)
+        #model = model.to(args.local_rank)
+        #model = DistributedDataParallel(model, device_ids=[args.local_rank])
 
     print_once('Setting up datasets...')
     (
