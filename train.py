@@ -285,7 +285,7 @@ def train_step( model, loss_fn, args, batch_size, feats, feat_lens, txt, txt_len
         else:  
             model_start = time.time()
             log_probs, log_prob_lens = model(feats, feat_lens, txt, txt_lens, meta_data[0])
-            print('model time is', time.time() - model_start)
+            #print('model time is', time.time() - model_start)
 
         loss = loss_fn(log_probs, log_prob_lens, txt, txt_lens, meta_data[0])
         if args.enable_prefetch and train_loader is not None:
@@ -309,13 +309,13 @@ def train_step( model, loss_fn, args, batch_size, feats, feat_lens, txt, txt_len
         else:
             with amp.scale_loss(loss, optimizer) as scaled_loss:
                 scaled_loss.backward()
-                print('backward time is ', time.time() - backward_start)
+                #print('backward time is ', time.time() - backward_start)
 
         # sync before return         
         copy_stream.synchronize()
         if torch.isnan(loss_cpu).any():
             raise Exception("Loss is NaN")
-        print('time after sync is ', time.time() - backward_start)
+        #print('time after sync is ', time.time() - backward_start)
         return loss_cpu.item(), lr_cpu.item()
 
     else:
