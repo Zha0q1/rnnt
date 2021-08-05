@@ -53,7 +53,9 @@ from rnnt.rnnt_graph import RNNTGraph
 
 from mlperf import logging
 
-from torch.profiler import profile, record_function, ProfilerActivity
+#from torch.profiler import profile, record_function, ProfilerActivity
+
+import nvtx
 
 # TODO Eval batch size
 
@@ -274,6 +276,7 @@ def evaluate(epoch, step, val_loader, val_feat_proc, detokenize,
     return wer
 
 
+@nvtx.annotate("train step", color="purple")
 def train_step( model, loss_fn, args, batch_size, feats, feat_lens, txt, txt_lens, optimizer, grad_scaler, 
                 meta_data, train_loader, rnnt_graph, copy_stream, pred_stream):
     # sync free loss

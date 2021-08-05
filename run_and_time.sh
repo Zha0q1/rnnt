@@ -86,13 +86,13 @@ else
 fi
 
 # zhaoqi: use our own setup
-PROC_PER_NODE=8
+PROC_PER_NODE=2
 WORLD_SIZE_JOB=$SLURM_NTASKS
 RANK_NODE=$SLURM_NODEID
 MASTER_ADDR_JOB=$SLURM_SUBMIT_HOST
 MASTER_PORT_JOB="12234"
 echo "cmd is ----!"
-CMD=(" python -m torch.distributed.launch --nproc_per_node=${PROC_PER_NODE} --nnodes=${WORLD_SIZE_JOB} --node_rank=${RANK_NODE} --master_addr=${MASTER_ADDR_JOB} --master_port=${MASTER_PORT_JOB} ")
+CMD=(" python -m torch.distributed.launch --nproc_per_node=${PROC_PER_NODE} --nnodes=${WORLD_SIZE_JOB} --node_rank=${RANK_NODE} --master_addr=${MASTER_ADDR_JOB} --master_port=${MASTER_PORT_JOB} --use_env --no_python")
 
 echo "${CMD[@]}"
 
@@ -129,7 +129,7 @@ echo "slurm submit host ${SLURM_SUBMIT_HOST}"
 
 mkdir -p /results
 # run training
-ARGS="train.py \
+ARGS="bash nsys_launch.sh python -u train.py \
   --batch_size=$BATCHSIZE \
   --beta1=${BETA1} \
   --beta2=${BETA2} \
