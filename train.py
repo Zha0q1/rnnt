@@ -293,9 +293,9 @@ def train_step( model, loss_fn, args, batch_size, feats, feat_lens, txt, txt_len
             log_probs, log_prob_lens = rnnt_graph.step(feats, feat_lens, txt, txt_lens, meta_data[0])
         else:
             #print('not using rnnt graph')
-            model_start = time.time()
+            #model_start = time.time()
             log_probs, log_prob_lens = model(feats, feat_lens, txt, txt_lens, meta_data[0])
-            print('time taken: ', time.time()-model_start)
+            #print('time taken: ', time.time()-model_start)
 
         loss = loss_fn(log_probs, log_prob_lens, txt, txt_lens, meta_data[0])
         if args.enable_prefetch and train_loader is not None:
@@ -313,22 +313,22 @@ def train_step( model, loss_fn, args, batch_size, feats, feat_lens, txt, txt_len
 
         del log_probs, log_prob_lens
         
-        backward_start = time.time()
+        #backward_start = time.time()
         if args.dist_lamb:
             grad_scaler.scale(loss).backward()
         else:
             with amp.scale_loss(loss, optimizer) as scaled_loss:
-                print('before backward')
+                #print('before backward')
                 scaled_loss.backward()
-                print('after backward')
-                print('backward time', time.time() - backward_start)
+                #print('after backward')
+                #print('backward time', time.time() - backward_start)
 
         # sync before return         
         copy_stream.synchronize()
         if torch.isnan(loss_cpu).any():
             raise Exception("Loss is NaN")
-        print('returning from trainer step')
-        print('time after sync', time.time() - backward_start)
+        #print('returning from trainer step')
+        #print('time after sync', time.time() - backward_start)
         return loss_cpu.item(), lr_cpu.item()
 
     else:
@@ -429,7 +429,7 @@ def main():
         assert args.dist_lamb, "dist LAMB must be used when batch split is enabled"
 
     num_nodes = os.environ.get('SLURM_JOB_NUM_NODES', 1)
-    print('num nodes is ?? ', num_nodes)
+    #print('num nodes is ?? ', num_nodes)
     logging.log_event(logging.constants.SUBMISSION_BENCHMARK, value=logging.constants.RNNT)
     logging.log_event(logging.constants.SUBMISSION_ORG, value='NVIDIA')
     logging.log_event(logging.constants.SUBMISSION_DIVISION, value=logging.constants.CLOSED) # closed or open
@@ -532,7 +532,7 @@ def main():
             min_lr=args.min_lr, exp_gamma=args.lr_exp_gamma, dist_lamb=args.dist_lamb)
 
     if not args.dist_lamb and multi_gpu:
-        print('using ddp here')
+        #print('using ddp here')
         model = model.to(args.local_rank)
         model = DistributedDataParallel(model)
 
@@ -703,7 +703,7 @@ def main():
             args.pre_sort_for_seq_split
         )
     else:
-        print('using simple sampler!!')
+        #print('using simple sampler!!')
         train_sampler = dali_sampler.SimpleSampler(train_dataset_kw)
 
     eval_sampler = dali_sampler.SimpleSampler(val_dataset_kw)
@@ -860,7 +860,7 @@ def main():
         step_start_time = time.time()
 
         for batch in train_loader:
-            print('step is ', step)
+            #print('step is ', step)
             #if step == 7:
             #    break
             if accumulated_batches == 0:
@@ -944,10 +944,10 @@ def main():
                         dict_log["seq-len-min"] = min(all_feat_lens).item()
                         dict_log["seq-len-max"] = max(all_feat_lens).item()
 
-                    print('loss ', dict_log['loss'])
-                    print('throughput ', dict_log['throughput'])
-                    print('took ', dict_log['took'])
-                    print('lrate ', dict_log['lrate'])
+                    #print('loss ', dict_log['loss'])
+                    #print('throughput ', dict_log['throughput'])
+                    #print('took ', dict_log['took'])
+                    #print('lrate ', dict_log['lrate'])
                     log((epoch, step % steps_per_epoch or steps_per_epoch, steps_per_epoch),
                         step, 'train', dict_log)
 
