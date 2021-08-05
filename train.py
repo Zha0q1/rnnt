@@ -60,6 +60,7 @@ from rnnt.rnnt_graph import RNNTGraph
 
 from mlperf import logging
 
+import nvtx
 
 # TODO Eval batch size
 
@@ -282,7 +283,7 @@ def evaluate(epoch, step, val_loader, val_feat_proc, detokenize,
                                  'took': time.time() - start_time})
     return wer
 
-
+@nvtx.annotate("train_step", color="blue")
 def train_step( model, loss_fn, args, batch_size, feats, feat_lens, txt, txt_lens, optimizer, grad_scaler, 
                 meta_data, train_loader, rnnt_graph, copy_stream, pred_stream):
     # sync free loss
