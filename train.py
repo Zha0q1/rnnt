@@ -929,10 +929,6 @@ def main():
                         dict_log["seq-len-min"] = min(all_feat_lens).item()
                         dict_log["seq-len-max"] = max(all_feat_lens).item()
 
-                    print('loss ', dict_log['loss'])
-                    print('throughput ', dict_log['throughput'])
-                    print('took ', dict_log['took'])
-                    print('lrate ', dict_log['lrate'])
                     log((epoch, step % steps_per_epoch or steps_per_epoch, steps_per_epoch),
                         step, 'train', dict_log)
 

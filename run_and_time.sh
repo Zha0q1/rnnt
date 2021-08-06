@@ -122,11 +122,11 @@ echo "slum node id${SLURM_NODEID}"
 echo "slurm submit host ${SLURM_SUBMIT_HOST}"
 
 # zhaoqi: communication flags
-#export OMPI_MCA_btl_tcp_if_exclude="docker0,lo"
-#export PMIX_MCA_gds=hash
-#export SAGEMAKER_INSTANCE_TYPE="ml.p4d.24xlarge"
-#export NCCL_SOCKET_IFNAME="^lo,docker"
-#export FI_EFA_USE_DEVICE_RDMA="1"
+export OMPI_MCA_btl_tcp_if_exclude="docker0,lo"
+export PMIX_MCA_gds=hash
+export SAGEMAKER_INSTANCE_TYPE="ml.p4d.24xlarge"
+export NCCL_SOCKET_IFNAME="^lo,docker"
+export FI_EFA_USE_DEVICE_RDMA="1"
 
 mkdir -p /results
 # run training
