@@ -846,7 +846,7 @@ def main():
         step_start_time = time.time()
 
         for batch in train_loader:
-            print('step is ', step)
+            #print('step is ', step)
             if accumulated_batches == 0:
                 if not args.dist_lamb:
                     optimizer.zero_grad()
