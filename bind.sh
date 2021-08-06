@@ -31,6 +31,7 @@ EOF
 ################################################################################
 
 cpu_mode='node'
+#cpu_mode='exclusive'
 mem_mode='node'
 ib_mode='off'
 cluster=''
@@ -181,30 +182,32 @@ case "${mem_mode}" in
         ;;
 esac
 
-case "${ib_mode}" in
-    single)
-        if [ "${num_ibdevs}" -eq 0 ]; then
-            echo "WARNING: used '$0 --ib=single', but there are 0 IB devices available; skipping IB binding." 2>&1
-        else
-            readonly ibdev="${ibdevs[$(( local_rank * num_ibdevs / num_gpus ))]}"
-            export OMPI_MCA_btl_openib_if_include="${OMPI_MCA_btl_openib_if_include-$ibdev}"
-            export UCX_NET_DEVICES="${UCX_NET_DEVICES-$ibdev:1}"
-        fi
-        ;;
-    off|'')
-        ;;
-    *)
-        echo "ERROR: invalid ib mode '${ib_mode}'" 2>&1
-        print_usage
-        exit 1
-        ;;
-esac
+
+#case "${ib_mode}" in
+#    single)
+#        if [ "${num_ibdevs}" -eq 0 ]; then
+#            echo "WARNING: used '$0 --ib=single', but there are 0 IB devices available; skipping IB binding." 2>&1
+#        else
+#            readonly ibdev="${ibdevs[$(( local_rank * num_ibdevs / num_gpus ))]}"
+#            export OMPI_MCA_btl_openib_if_include="${OMPI_MCA_btl_openib_if_include-$ibdev}"
+#            export UCX_NET_DEVICES="${UCX_NET_DEVICES-$ibdev:1}"
+#        fi
+#        ;;
+#    off|'')
+#        ;;
+#    *)
+#        echo "ERROR: invalid ib mode '${ib_mode}'" 2>&1
+#        print_usage
+#        exit 1
+#        ;;
+#esac
 
 ################################################################################
 # Exec
 ################################################################################
 
 if [ "${#numactl_args[@]}" -gt 0 ] ; then
+    echo "in bind.sh!!  ${numactl_args[@]}"
     set -x
     exec numactl "${numactl_args[@]}" -- "${@}"
 else
