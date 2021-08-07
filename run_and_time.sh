@@ -33,7 +33,7 @@ set -e
 : "${SEED:=2021}"
 : "${LR:=0.004}"
 # zhaoqi: no warm up allows loss to reduce quicker in the first few epochs
-: "${WARMUP:=0}"
+: "${WARMUP:=6}"
 : "${GRAD_ACCUMULATION_STEPS:=1}"
 : "${VAL_FREQUENCY:=1}"
 : "${HOLD_EPOCHS:=40}"

@@ -29,8 +29,8 @@ import torch.distributed as dist
 from apex import amp
 from torch.cuda.amp import GradScaler
 from apex.optimizers import FusedLAMB
-#from torch.nn.parallel import DistributedDataParallel
-from apex.parallel import DistributedDataParallel
+from torch.nn.parallel import DistributedDataParallel
+#from apex.parallel import DistributedDataParallel
 from apex.contrib.optimizers.distributed_fused_lamb import DistributedFusedLAMB
 import amp_C
 import math
@@ -519,9 +519,9 @@ def main():
 
     if not args.dist_lamb and multi_gpu:
         print('using ddp here')
-        model = DistributedDataParallel(model)
-        #model = model.to(args.local_rank)
-        #model = DistributedDataParallel(model, device_ids=[args.local_rank])
+        #model = DistributedDataParallel(model)
+        model = model.to(args.local_rank)
+        model = DistributedDataParallel(model, device_ids=[args.local_rank])
 
     print_once('Setting up datasets...')
     (
