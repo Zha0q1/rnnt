@@ -147,7 +147,7 @@ ARGS="train.py \
   --ema=$EMA \
   --output_dir ${OUTPUT_DIR} \
   --model_config=$MODELCONFIG \
-  --seed $SEED \
+  --seed 28400 \
   --dataset_dir=${DATASET_DIR} \
   --cudnn_benchmark \
   --dali_device $DALIDEVICE \
