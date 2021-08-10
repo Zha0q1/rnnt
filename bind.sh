@@ -30,9 +30,9 @@ EOF
 # Argument parsing
 ################################################################################
 
-#cpu_mode='node'
-cpu_mode='exclusive,nosmt'
-mem_mode='off'
+cpu_mode='node'
+#cpu_mode='exclusive,nosmt'
+mem_mode='node'
 ib_mode='off'
 cluster=''
 while [ $# -gt 0 ]; do
@@ -133,8 +133,8 @@ case "${cpu_mode}" in
         )" )
         ;;
     exclusive,nosmt)
-        #numactl_args+=( "$(printf -- "--physcpubind=%u-%u" \
-        numactl_args+=( "$(printf -- "core:%u-%u" \
+        numactl_args+=( "$(printf -- "--physcpubind=%u-%u" \
+        #numactl_args+=( "$(printf -- "core:%u-%u" \
 	    $(( local_rank * cores_per_gpu )) \
             $(( (local_rank + 1) * cores_per_gpu - 1 )) \
         )" )
@@ -210,8 +210,8 @@ esac
 if [ "${#numactl_args[@]}" -gt 0 ] ; then
     echo "in bind.sh!!  ${numactl_args[@]}"
     set -x
-    #exec numactl "${numactl_args[@]}" -- "${@}"
-    exec hwloc-bind "${numactl_args[@]}" -- "${@}"
+    exec numactl "${numactl_args[@]}" -- "${@}"
+    # exec hwloc-bind "${numactl_args[@]}" -- "${@}"
 else
     exec "${@}"
 fi
